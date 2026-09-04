@@ -121,29 +121,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);min-h
 
 <script>
 // ====== CONFIGURACION ======
-var SITIO_URL = 'https://sites.google.com/view/escuelajosegonzalez/inicio';
-var API_URL = 'https://script.google.com/macros/s/AKfycbxiSl2S82UmtZLDkorhi-LQtnz23cEZ2nwYQe_B5HwAepdGG_ozL-9XiY4QSiugKW1OaQ/exec';
+var SITIO_URL = 'PEGA_AQUI_LA_URL_DE_TU_GOOGLE_SITE';
+var API_URL = 'PEGA_AQUI_TU_URL_DEL_APPS_SCRIPT';
+var VAPID_KEY = 'PEGA_AQUI_TU_VAPID_PUBLIC_KEY';
 
 var firebaseConfig = {
-  apiKey: "AIzaSyCofh_DKfPTm4drmjtVu0-qbU5W5yRCchE",
-  authDomain: "escuela-notificaciones-ce01b.firebaseapp.com",
-  projectId: "escuela-notificaciones-ce01b",
-  messagingSenderId: "6514299276",
-  appId: "1:6514299276:web:751e2dff8da75716c646a9"
+  apiKey: "PEGA_AQUI",
+  authDomain: "PEGA_AQUI",
+  projectId: "PEGA_AQUI",
+  messagingSenderId: "PEGA_AQUI",
+  appId: "PEGA_AQUI"
 };
 
 // ====== INICIALIZAR FIREBASE ======
 firebase.initializeApp(firebaseConfig);
 var messaging = firebase.messaging();
 var swReg = null;
+var currentToken = localStorage.getItem('fcm_token') || null;
 
-// Registrar service worker manualmente con la ruta correcta
+// Registrar service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function(reg) {
     swReg = reg;
-    console.log('Service worker registrado OK');
   }).catch(function(err) {
-    console.error('Error registrando service worker:', err);
+    console.error('SW error:', err);
   });
 }
 
@@ -161,16 +162,17 @@ function showToast(msg, type) {
   setTimeout(function() { t.style.animation = 'toastOut .3s ease-in forwards'; setTimeout(function() { t.remove(); }, 300); }, 3000);
 }
 
-// ====== REGISTRAR TOKEN EN GOOGLE SHEET ======
+// ====== REGISTRAR TOKEN EN SHEET ======
 function registerTokenOnServer(token) {
-  var fd = new URLSearchParams();
+  var fd = new URL#SearchParams();
   fd.append('action', 'registerToken');
   fd.append('token', token);
   fetch(API_URL, { method: 'POST', body: fd, redirect: 'follow' })
     .then(function(r) { return r.json(); })
     .then(function(result) {
       if (result.success) {
-        localStorage.setItem('notif_enabled', 'true');
+        currentToken = token;
+        localStorage.setItem('fcm_token', token);
         updateNotifUI();
         showToast('Notificaciones activadas');
       }
@@ -178,27 +180,32 @@ function registerTokenOnServer(token) {
     .catch(function() { showToast('Error al registrar', 'err'); });
 }
 
-function unregisterTokenOnServer(token) {
+function unregisterTokenFromServer(token) {
   var fd = new URLSearchParams();
   fd.append('action', 'unregisterToken');
   fd.append('token', token);
   fetch(API_URL, { method: 'POST', body: fd, redirect: 'follow' })
     .then(function() {
-      localStorage.setItem('notif_enabled', 'false');
+      currentToken = null;
+      localStorage.removeItem('fcm_token');
       updateNotifUI();
       showToast('Notificaciones desactivadas');
     })
-    .catch(function() { showToast('Error', 'err'); });
+    .catch(function() {
+      currentToken = null;
+      localStorage.removeItem('fcm_token');
+      updateNotifUI();
+    });
 }
 
 // ====== ACTIVAR NOTIFICACIONES ======
 function enableNotifications() {
   Notification.requestPermission().then(function(permission) {
     if (permission === 'granted') {
-      var getTokenOptions = { vapidKey: 'PEGA_AQUI_TU_VAPID_PUBLIC_KEY' };
-      if (swReg) { getTokenOptions.serviceWorkerRegistration = swReg; }
+      var opts = { vapidKey: VAPID_KEY };
+      if (swReg) { opts.serviceWorkerRegistration = swReg; }
 
-      messaging.getToken(getTokenOptions)
+      messaging.getToken(opts)
         .then(function(token) {
           if (token) {
             registerTokenOnServer(token);
@@ -207,7 +214,7 @@ function enableNotifications() {
           }
         })
         .catch(function(err) {
-          console.error('Error getToken:', err);
+          console.error('getToken error:', err);
           showToast('Error al obtener token', 'err');
         });
     } else {
@@ -216,28 +223,30 @@ function enableNotifications() {
   });
 }
 
+// ====== DESACTIVAR NOTIFICACIONES ======
 function disableNotifications() {
-  var getTokenOptions = { vapidKey: 'PEGA_AQUI_TU_VAPID_PUBLIC_KEY' };
-  if (swReg) { getTokenOptions.serviceWorkerRegistration = swReg; }
+  if (!currentToken) {
+    updateNotifUI();
+    return;
+  }
 
-  messaging.getToken(getTokenOptions)
-    .then(function(token) {
-      if (token) {
-        messaging.deleteToken(token).then(function() {
-          unregisterTokenOnServer(token);
-        });
-      }
-    })
-    .catch(function() {});
+  var tokenToDelete = currentToken;
+
+  messaging.deleteToken(tokenToDelete).then(function() {
+    unregisterTokenFromServer(tokenToDelete);
+  }).catch(function(err) {
+    console.error('deleteToken error:', err);
+    // Aunque falle en Firebase, lo quitamos localmente
+    unregisterTokenFromServer(tokenToDelete);
+  });
 }
 
 // ====== UI DE NOTIFICACIONES ======
 function updateNotifUI() {
-  var enabled = localStorage.getItem('notif_enabled') === 'true';
   var statusEl = document.getElementById('notifStatus');
   var actionsEl = document.getElementById('notifActions');
 
-  if (enabled) {
+  if (currentToken) {
     statusEl.innerHTML = '<div class="notif-status active"><i class="fas fa-check-circle"></i> Notificaciones activadas</div>';
     actionsEl.innerHTML = '<button class="btn-notif disable" onclick="disableNotifications()"><i class="fas fa-bell-slash"></i> Desactivar</button>';
   } else {
@@ -255,15 +264,6 @@ messaging.onMessage(function(payload) {
 
 // ====== INICIO ======
 updateNotifUI();
-
-// Verificar permiso real del navegador
-if ('Notification' in window && Notification.permission === 'granted') {
-  localStorage.setItem('notif_enabled', 'true');
-  updateNotifUI();
-} else if ('Notification' in window && Notification.permission === 'denied') {
-  localStorage.setItem('notif_enabled', 'false');
-  updateNotifUI();
-}
 </script>
 </body>
 </html>
