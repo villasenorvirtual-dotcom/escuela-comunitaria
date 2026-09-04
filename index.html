@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a1f14">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>Mi Escuela</title>
@@ -182,21 +182,24 @@ function unregisterTokenOnServer(token) {
 
 // ====== ACTIVAR NOTIFICACIONES ======
 function enableNotifications() {
-  messaging.requestPermission()
-    .then(function() {
-            return messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'});
-    })
-    .then(function(token) {
-      if (token) {
-        registerTokenOnServer(token);
-      } else {
-        showToast('No se pudo obtener el token', 'err');
-      }
-    })
-    .catch(function(err) {
-      console.error(err);
-      showToast('Permiso denegado. Activalo desde ajustes del navegador.', 'err');
-    });
+  Notification.requestPermission().then(function(permission) {
+    if (permission === 'granted') {
+      messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'})
+        .then(function(token) {
+          if (token) {
+            registerTokenOnServer(token);
+          } else {
+            showToast('No se pudo obtener el token', 'err');
+          }
+        })
+        .catch(function(err) {
+          console.error(err);
+          showToast('Error al obtener token', 'err');
+        });
+    } else {
+      showToast('Permiso denegado', 'err');
+    }
+  });
 }
 
 function disableNotifications() {
