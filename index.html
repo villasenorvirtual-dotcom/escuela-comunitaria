@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a1f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Mi Escuela</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--bg:#0a1f14;--bg2:#0e2a1b;--fg:#e8f5ec;--muted:#6b9a7e;--accent:#00e68a;--accent2:#00b36b;--glow:rgba(0,230,138,0.12);--card:#122b1e;--border:#1e3d2a;--radius:18px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);min-height:100dvh;overflow-x:hidden}
+
+/* Fondo */
+.bg-deco{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.12;animation:float 15s ease-in-out infinite alternate}
+.bg-blob:nth-child(1){width:350px;height:350px;background:var(--accent);top:-120px;right:-80px}
+.bg-blob:nth-child(2){width:280px;height:280px;background:var(--accent2);bottom:80px;left:-100px;animation-delay:-5s}
+.bg-blob:nth-child(3){width:200px;height:200px;background:#006644;top:50%;left:60%;animation-delay:-10s}
+@keyframes float{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,-25px) scale(1.1)}}
+
+/* Layout */
+.container{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:24px 20px 40px;min-height:100dvh;display:flex;flex-direction:column}
+
+/* Header */
+.school-badge{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:var(--bg);margin:0 auto 20px;box-shadow:0 8px 30px rgba(0,230,138,0.25)}
+.school-name{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;text-align:center;line-height:1.15;margin-bottom:6px;letter-spacing:-.5px}
+.school-name span{color:var(--accent)}
+.school-subtitle{color:var(--muted);font-size:14px;text-align:center;margin-bottom:32px;font-weight:400}
+
+/* Hero */
+.hero-text{font-size:16px;color:var(--fg);line-height:1.7;text-align:center;margin-bottom:36px;max-width:360px;margin-left:auto;margin-right:auto}
+
+/* Botón principal */
+.btn-main{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:18px 28px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg);font-family:inherit;font-size:18px;font-weight:800;border:none;cursor:pointer;transition:.3s;box-shadow:0 6px 30px rgba(0,230,138,0.3);letter-spacing:.3px}
+.btn-main:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,230,138,0.4)}
+.btn-main:active{transform:translateY(0)}
+.btn-main i{font-size:20px}
+
+/* Notificaciones */
+.notif-section{margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 20px}
+.notif-title{font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.notif-title i{color:var(--accent)}
+.notif-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.notif-status{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:10px}
+.notif-status.active{background:var(--glow);color:var(--accent)}
+.notif-status.inactive{background:rgba(255,165,2,0.1);color:#ffa502}
+.notif-status i{font-size:14px}
+
+.btn-notif{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:.3s;margin-top:12px}
+.btn-notif.enable{background:var(--accent);color:var(--bg)}
+.btn-notif.disable{background:transparent;color:var(--muted);border:1.5px solid var(--border)}
+
+/* Info cards */
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:32px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 10px;text-align:center;transition:.3s}
+.info-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.info-card i{font-size:22px;color:var(--accent);margin-bottom:6px;display:block}
+.info-card span{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* Footer */
+.footer{margin-top:auto;padding-top:40px;text-align:center;font-size:11px;color:var(--muted);opacity:.6}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,.4);animation:toastIn .4s ease-out;max-width:90vw}
+.toast.ok{background:#0d2e1f;border:1px solid var(--accent2);color:var(--accent)}
+.toast.err{background:#2e0d14;border:1px solid #ff4757;color:#ff4757}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+</style>
+</head>
+<body>
+
+<div class="bg-deco">
+  <div class="bg-blob"></div>
+  <div class="bg-blob"></div>
+  <div class="bg-blob"></div>
+</div>
+
+<div class="container">
+
+  <div class="school-badge">E</div>
+  <h1 class="school-name">Mi <span>Escuela</span></h1>
+  <p class="school-subtitle">Educacion que transforma</p>
+
+  <p class="hero-text">
+    Bienvenido a la plataforma de nuestra comunidad escolar. 
+    Aqui encontraras avisos, recursos y toda la informacion que necesitas.
+  </p>
+
+  <button class="btn-main" onclick="abrirSitio()">
+    <i class="fas fa-globe"></i> Abrir Sitio Escolar
+  </button>
+
+  <div class="notif-section">
+    <div class="notif-title"><i class="fas fa-bell"></i> Notificaciones</div>
+    <p class="notif-desc">Activa las notificaciones para recibir avisos importantes, nuevas publicaciones y comunicados de la escuela directamente en tu celular.</p>
+    <div id="notifStatus"></div>
+    <div id="notifActions"></div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card"><i class="fas fa-bullhorn"></i><span>Avisos</span></div>
+    <div class="info-card"><i class="fas fa-calendar-alt"></i><span>Eventos</span></div>
+    <div class="info-card"><i class="fas fa-images"></i><span>Galeria</span></div>
+  </div>
+
+  <div class="footer">
+    Mi Escuela &middot; Plataforma Comunitaria v2.0
+  </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+
+<script>
+// ====== CONFIGURACION ======
+var SITIO_URL = 'PEGA_AQUI_LA_URL_DE_TU_GOOGLE_SITE';
+var API_URL = 'PEGA_AQUI_TU_URL_DEL_APPS_SCRIPT';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyCofh_DKfPTm4drmjtVu0-qbU5W5yRCchE",
+  authDomain: "escuela-notificaciones-ce01b.firebaseapp.com",
+  projectId: "escuela-notificaciones-ce01b",
+  messagingSenderId: "6514299276",
+  appId: "1:6514299276:web:751e2dff8da75716c646a9"
+};
+
+// ====== INICIALIZAR FIREBASE ======
+firebase.initializeApp(firebaseConfig);
+var messaging = firebase.messaging();
+
+// ====== ABRIR SITIO ======
+function abrirSitio() {
+  window.open(SITIO_URL, '_blank');
+}
+
+// ====== TOAST ======
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'ok');
+  t.innerHTML = '<i class="fas ' + (type === 'err' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.animation = 'toastOut .3s ease-in forwards'; setTimeout(function() { t.remove(); }, 300); }, 3000);
+}
+
+// ====== REGISTRAR TOKEN EN GOOGLE SHEET ======
+function registerTokenOnServer(token) {
+  var fd = new URLSearchParams();
+  fd.append('action', 'registerToken');
+  fd.append('token', token);
+  fetch(API_URL, { method: 'POST', body: fd, redirect: 'follow' })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result.success) {
+        localStorage.setItem('notif_enabled', 'true');
+        updateNotifUI();
+        showToast('Notificaciones activadas');
+      }
+    })
+    .catch(function() { showToast('Error al registrar', 'err'); });
+}
+
+function unregisterTokenOnServer(token) {
+  var fd = new URLSearchParams();
+  fd.append('action', 'unregisterToken');
+  fd.append('token', token);
+  fetch(API_URL, { method: 'POST', body: fd, redirect: 'follow' })
+    .then(function() {
+      localStorage.setItem('notif_enabled', 'false');
+      updateNotifUI();
+      showToast('Notificaciones desactivadas');
+    })
+    .catch(function() { showToast('Error', 'err'); });
+}
+
+// ====== ACTIVAR NOTIFICACIONES ======
+function enableNotifications() {
+  messaging.requestPermission()
+    .then(function() {
+            return messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'});
+    })
+    .then(function(token) {
+      if (token) {
+        registerTokenOnServer(token);
+      } else {
+        showToast('No se pudo obtener el token', 'err');
+      }
+    })
+    .catch(function(err) {
+      console.error(err);
+      showToast('Permiso denegado. Activalo desde ajustes del navegador.', 'err');
+    });
+}
+
+function disableNotifications() {
+    messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'})
+    .then(function(token) {
+      if (token) {
+        messaging.deleteToken(token).then(function() {
+          unregisterTokenOnServer(token);
+        });
+      }
+    })
+    .catch(function() {});
+}
+
+// ====== UI DE NOTIFICACIONES ======
+function updateNotifUI() {
+  var enabled = localStorage.getItem('notif_enabled') === 'true';
+  var statusEl = document.getElementById('notifStatus');
+  var actionsEl = document.getElementById('notifActions');
+
+  if (enabled) {
+    statusEl.innerHTML = '<div class="notif-status active"><i class="fas fa-check-circle"></i> Notificaciones activadas</div>';
+    actionsEl.innerHTML = '<button class="btn-notif disable" onclick="disableNotifications()"><i class="fas fa-bell-slash"></i> Desactivar</button>';
+  } else {
+    statusEl.innerHTML = '<div class="notif-status inactive"><i class="fas fa-exclamation-triangle"></i> Sin activar</div>';
+    actionsEl.innerHTML = '<button class="btn-notif enable" onclick="enableNotifications()"><i class="fas fa-bell"></i> Activar notificaciones</button>';
+  }
+}
+
+// ====== MENSAJES EN PRIMER PLANO ======
+messaging.onMessage(function(payload) {
+  var title = payload.notification ? payload.notification.title : 'Nueva publicacion';
+  var body = payload.notification ? payload.notification.body : '';
+  showToast(title + ': ' + body);
+});
+
+// ====== INICIO ======
+updateNotifUI();
+
+// Verificar permiso real del navegador
+if ('Notification' in window && Notification.permission === 'granted') {
+  localStorage.setItem('notif_enabled', 'true');
+  updateNotifUI();
+} else if ('Notification' in window && Notification.permission === 'denied') {
+  localStorage.setItem('notif_enabled', 'false');
+  updateNotifUI();
+}
+</script>
+</body>
+</html>
