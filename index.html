@@ -164,7 +164,7 @@ function showToast(msg, type) {
 
 // ====== REGISTRAR TOKEN EN SHEET ======
 function registerTokenOnServer(token) {
-  var fd = new URL#SearchParams();
+  var fd = new URLSearchParams();
   fd.append('action', 'registerToken');
   fd.append('token', token);
   fetch(API_URL, { method: 'POST', body: fd, redirect: 'follow' })
