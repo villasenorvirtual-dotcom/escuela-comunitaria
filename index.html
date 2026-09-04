@@ -135,6 +135,17 @@ var firebaseConfig = {
 // ====== INICIALIZAR FIREBASE ======
 firebase.initializeApp(firebaseConfig);
 var messaging = firebase.messaging();
+var swReg = null;
+
+// Registrar service worker manualmente con la ruta correcta
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function(reg) {
+    swReg = reg;
+    console.log('Service worker registrado OK');
+  }).catch(function(err) {
+    console.error('Error registrando service worker:', err);
+  });
+}
 
 // ====== ABRIR SITIO ======
 function abrirSitio() {
@@ -184,7 +195,10 @@ function unregisterTokenOnServer(token) {
 function enableNotifications() {
   Notification.requestPermission().then(function(permission) {
     if (permission === 'granted') {
-      messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'})
+      var getTokenOptions = { vapidKey: 'PEGA_AQUI_TU_VAPID_PUBLIC_KEY' };
+      if (swReg) { getTokenOptions.serviceWorkerRegistration = swReg; }
+
+      messaging.getToken(getTokenOptions)
         .then(function(token) {
           if (token) {
             registerTokenOnServer(token);
@@ -193,7 +207,7 @@ function enableNotifications() {
           }
         })
         .catch(function(err) {
-          console.error(err);
+          console.error('Error getToken:', err);
           showToast('Error al obtener token', 'err');
         });
     } else {
@@ -203,7 +217,10 @@ function enableNotifications() {
 }
 
 function disableNotifications() {
-    messaging.getToken({vapidKey: 'BHHYp8GI9IK8vlPdBWvNkPnIrNITLNVLBEq4hOp-drEGxENgZkNU0FFVOMe-ZohkbFnx-Zjl2HE4X6oG6mMJ4i4'})
+  var getTokenOptions = { vapidKey: 'PEGA_AQUI_TU_VAPID_PUBLIC_KEY' };
+  if (swReg) { getTokenOptions.serviceWorkerRegistration = swReg; }
+
+  messaging.getToken(getTokenOptions)
     .then(function(token) {
       if (token) {
         messaging.deleteToken(token).then(function() {
